@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=OpenSesame Questionnaire Processor
+Comment=Calculates scores from OpenSesame Questionnaires
+TryExec=questionnaire-processor
+Exec=questionnaire-processor
+Icon=x-office-spreadsheet
+Type=Application
+Categories=GNOME;GTK;Utility;
+StartupNotify=false
+X-Ubuntu-Gettext-Domain=questionnaire-processor
+Name[en_US]=OpenSesame Questionnaire Processor
+

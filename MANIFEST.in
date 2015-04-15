@@ -1,0 +1,5 @@
+include data/questionnaire-manager.desktop
+include data/questionnaire-processor.desktop
+recursive-include resources
+recursive-exclude *.pyc
+recursive-include ~*

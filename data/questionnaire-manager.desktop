@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=OpenSesame Questionnaire Manager
+Comment=Create and manage OpenSesame Questionnaires
+TryExec=questionnaire-manager
+Exec=questionnaire-manager
+Icon=x-office-spreadsheet
+Type=Application
+Categories=GNOME;GTK;Utility;
+StartupNotify=false
+X-Ubuntu-Gettext-Domain=questionnaire-manager
+Name[en_US]=OpenSesame Questionnaire Manager

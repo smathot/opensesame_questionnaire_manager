@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This file is part of OpenSesame Survey Manager
+
+OpenSesame Survey Manager is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+OpenSesame Survey Manager is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Refer to <http://www.gnu.org/licenses/> for a copy of the GNU General Public License.
+
+@author Bob Rosbag
+"""
+
+from __future__ import unicode_literals
+import sys
+import os
+from libquestionnairemanager import calculatescore
+from PyQt4 import QtGui
+
+def main():
+    if len(sys.argv) == 1:
+        from libquestionnairemanager.questionnaireprocessor_ui import QuestionnaireProcessorUI
+        app = QtGui.QApplication(sys.argv)
+        win = QuestionnaireProcessorUI()
+        win.show()
+        sys.exit(app.exec_())
+
+    elif len(sys.argv) == 2:
+             print >> sys.stderr, "Not enough arguments, without GUI at minimum the input folder and output folder have to be given."
+    elif len(sys.argv) == 3:
+        if not os.path.isdir(sys.argv[1]):
+            print >> sys.stderr, "Error: The specified input folder is invalid"
+        elif not os.path.isdir(sys.argv[2]):
+            print >> sys.stderr, "Error: The specified output folder is invalid"
+        else:
+            idKey = 'id'
+            responseKey = 'response'
+            categoryKey = 'category'
+            answerOptionKey = 'answer_options'
+            answerScoreKey = 'answer_options_scores'
+            idList = None
+            categoryList = None
+            answerString = None
+            scoreList = None
+            custom = False
+
+            calculatescore.analyzeQuestionnaire(sys.argv[1], sys.argv[2], responseKey, idKey, categoryKey, answerOptionKey, answerScoreKey, idList, categoryList, answerString, scoreList, custom, progressBar=None)
+
+    else:
+        print >> sys.stderr, "Too many arguments given. This command only accepts start of the gui or a cmd with an input folder and an output folder."
+
+if __name__ == "__main__":
+    main()
+
