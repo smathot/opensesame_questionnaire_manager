@@ -26,7 +26,7 @@ import calculatescore
 
 from PyQt4 import QtCore, Qt, QtGui, uic
 from PyQt4.QtWebKit import QWebView
-from tools import OutLog, get_resource_loc
+from io_tools import OutLog, get_resource_loc
 
 
 version = "1.0.0"
@@ -41,7 +41,7 @@ Copyright 2015
 {2}
 """.format(version,author,email)
 
-
+debug = False
 
 class QuestionnaireProcessorUI(QtGui.QMainWindow):
     """
@@ -50,7 +50,7 @@ class QuestionnaireProcessorUI(QtGui.QMainWindow):
     def __init__(self):
         super(QuestionnaireProcessorUI, self).__init__()
         self._initUI()
-        self.connect(self, Qt.SIGNAL('triggered()'), self.closeEvent )
+        #self.connect(self, Qt.SIGNAL('triggered()'), self.closeEvent )
         #self.triggered.connect(self.closeEvent)
 
 
@@ -106,7 +106,8 @@ class QuestionnaireProcessorUI(QtGui.QMainWindow):
         pixmap = QtGui.QPixmap(labelimg_path)
         self.image.setPixmap(pixmap)
 
-
+        if debug:
+            self.statusBox.show()
 
         #self.rowCounter = -1
         #self.answerPlainTextEdit.setPlainText(u'No:0\nMaybe:1\nYes:2')
@@ -170,13 +171,13 @@ class QuestionnaireProcessorUI(QtGui.QMainWindow):
 
     def closeEvent(self, event):
         reply = QtGui.QMessageBox.question(self, 'Message',
-            "Are you sure to quit?", QtGui.QMessageBox.Yes | 
+            "Are you sure to quit?", QtGui.QMessageBox.Yes |
             QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         if reply == QtGui.QMessageBox.Yes:
             event.accept()
         else:
-            event.ignore()  
-        
+            event.ignore()
+
     def updateCustomColumnWidgets(self):
 
         if self.customColumnCheckBox.isChecked() :
@@ -337,11 +338,11 @@ class QuestionnaireProcessorUI(QtGui.QMainWindow):
                     print("Ready.")
 
             elif self.customColumnCheckBox.isChecked() and self.customExperimentCheckBox.isChecked() == False:
-                responseKey = self.responseColumnLineEdit.text()
-                idKey = self.idColumnLineEdit.text()
-                categoryKey = self.categoryColumnLineEdit.text()
-                answerOptionKey = self.answerOptionColumnLineEdit.text()
-                answerScoreKey = self.answerScoreColumnLineEdit.text()
+                responseKey = unicode(self.responseColumnLineEdit.text())
+                idKey = unicode(self.idColumnLineEdit.text())
+                categoryKey = unicode(self.categoryColumnLineEdit.text())
+                answerOptionKey = unicode(self.answerOptionColumnLineEdit.text())
+                answerScoreKey = unicode(self.answerScoreColumnLineEdit.text())
                 custom = False
                 if responseKey != "" and idKey != "" and categoryKey != "" and answerOptionKey != "" and answerScoreKey != "":
 

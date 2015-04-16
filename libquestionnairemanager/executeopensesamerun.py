@@ -22,23 +22,20 @@ from __future__ import unicode_literals
 
 import os
 import sys
+import subprocess
+
+def runExperiment(pythonCommand, command, expFolder, logDestinationFileList, subjectNr, language, experimentList):
 
 
-def runExperiment(pythonCommand, command, expFolder, destinationFolder, subjectNr, language, experimentList):
 
-    if not os.path.isdir(destinationFolder):
-        print >> sys.stderr, "ERROR: the specified folder " + destinationFolder + " is invalid"
-        return False
-
-    import subprocess
 
     fs = os.sep
 
-    for experiment in experimentList:
+    for index in range(len(experimentList)):
 
-        fileName     = expFolder + fs + language + fs + experiment
-        subjectArg   = u'--subject=' + unicode(subjectNr)
-        logArg       = u'--logfile=' + destinationFolder + fs + u'subject-' + unicode(subjectNr) + u'.csv'
+        fileName     = expFolder + fs + language + fs + experimentList[index]
+        subjectArg   = u'--subject=' + subjectNr
+        logArg       = u'--logfile=' + logDestinationFileList[index]
         screenArg    = u'--fullscreen'
         if pythonCommand != "":
             args = [pythonCommand, command, fileName, subjectArg, logArg, screenArg]

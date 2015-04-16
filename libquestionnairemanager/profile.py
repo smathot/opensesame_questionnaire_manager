@@ -19,7 +19,7 @@ Refer to <http://www.gnu.org/licenses/> for a copy of the GNU General Public Lic
 
 #===================================================================
 # Module with functions to save & restore qt widget values
-# Written by: Alan Lilly 
+# Written by: Alan Lilly
 # Website: http://panofish.net
 #===================================================================
 
@@ -56,13 +56,13 @@ def guiSave(ui, settings,widString):
             name = obj.objectName()
             state = obj.isChecked()
             settings.setValue(name, state)
-            
-        
+
+
     name   = 'Listwidget'      # get combobox name
     #text   = obj.itemText(index)   # get the text for current index
     settings.setValue(name, widString)   # save combobox selection to registry
-    
-    
+
+
 #===================================================================
 # restore "ui" controls with values stored in registry "settings"
 # currently only handles comboboxes, editlines &checkboxes
@@ -78,18 +78,18 @@ def guiRestore(ui, settings):
             #text   = obj.itemText(index)   # get the text for new selected index
             name   = obj.objectName()
 
-            value = unicode(settings.value(name))  
+            value = settings.value(name)
 
             if value == "":
                 continue
 
             index = obj.findText(value)   # get the corresponding index for specified string in combobox
 
-            obj.setCurrentIndex(index)   # preselect a combobox value by index    
+            obj.setCurrentIndex(index)   # preselect a combobox value by index
 
         if isinstance(obj, QLineEdit):
             name = obj.objectName()
-            value = unicode(settings.value(name))  # get stored value from registry
+            value = settings.value(name)  # get stored value from registry
             obj.setText(value)  # restore lineEditFile
 
         if isinstance(obj, QCheckBox):
@@ -102,9 +102,9 @@ def guiRestore(ui, settings):
     #text   = obj.itemText(index)   # get the text for current index
     value = settings.value(name)
 
-    return value    
-    
-    
+    return value
+
+
 def stringToBool(string):
     if string == 'true' or string == 'True' or string == '1':
         return True

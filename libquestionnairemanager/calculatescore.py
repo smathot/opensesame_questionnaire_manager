@@ -35,6 +35,8 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
 
     if not os.path.isdir(dataFolder):
         print >> sys.stderr, "ERROR: the specified folder " + dataFolder + " is invalid"
+        showErrorMessage("ERROR: the specified folder " + dataFolder + " is invalid")
+
         return False
 
 #    response       = 'response'
@@ -54,9 +56,9 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
 
     if singleFolder == False and custom == True:
         print >> sys.stderr, "\nError: Processing a custom experiment works only with a single experiment, multiple experiments are not supported in this mode"
+        showErrorMessage("Error: Processing a custom experiment works only with a single experiment, multiple experiments are not supported in this mode")
+
         return
-
-
 
     totalFiles = 0
 
@@ -98,6 +100,8 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
             except:
 
                 print >> sys.stderr, "\nError: Column with name: " + responseKey + " is not present in the data file, please try custom experiment"
+                showErrorMessage("Error: Column with name: " + responseKey + " is not present in the data file, please try custom experiment")
+
                 return
 
 
@@ -112,7 +116,7 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
                     idList           = dataDict[idKey]
                 except:
                     print >> sys.stderr, "\nError: Column with name: " + idKey + " is not present in the data file, please try custom experiment"
-                    showErrorMessage("\nError: Column with name: " + idKey + " is not present in the data file, please try custom experiment")
+                    showErrorMessage("Error: Column with name: " + idKey + " is not present in the data file, please try custom experiment")
                     return
 
 
@@ -121,6 +125,7 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
 
                 except:
                     print >> sys.stderr, "\nError: Column with name: " + categoryKey + " is not present in the data file, please try custom experiment"
+                    showErrorMessage("Error: Column with name: " + categoryKey + " is not present in the data file, please try custom experiment")
                     return
 
                 try:
@@ -128,6 +133,8 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
 
                 except:
                     print >> sys.stderr, "\nError: Column with name: " + answerOptionKey + " is not present in the data file, please try custom experiment"
+                    showErrorMessage("Error: Column with name: " + answerOptionKey + " is not present in the data file, please try custom experiment")
+
                     return
 
                 try:
@@ -135,6 +142,8 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
 
                 except:
                     print >> sys.stderr, "\nError: Column with name: " + answerScoreKey + " is not present in the data file, please try custom experiment"
+                    showErrorMessage("Error: Column with name: " + answerScoreKey + " is not present in the data file, please try custom experiment")
+
                     return
 
 
@@ -183,7 +192,16 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
 
                 categories = categoryDict[selectedId]
                 scoreDict = answerScoreDict[selectedId]
-                score = scoreDict[response]
+
+                try:
+                    score = scoreDict[response]
+
+                except:
+                    print >> sys.stderr, "\nError: Response: " + response + " is unknown"
+                    showErrorMessage("Error: Response: " + response + " is unknown")
+
+                    return
+
 
                 individualScoreDict[selectedId] = score
 
@@ -214,7 +232,7 @@ def analyzeQuestionnaire(dataFolder, destinationFolder, responseKey, idKey, cate
             counter += 1
             if not progressBar is None:
                 progressBar.setValue(counter / totalFiles * 100)
-                
+
         if singleFolder:
             destinationFile = destinationFolder + fs + 'Cumulative_Score_Results' + resultExt
         else:
@@ -271,20 +289,20 @@ def readCsv(pathToCsv):
 
     # Try to determine which format of csv is used. In some countries, the
     # list separator symbol is ; instead of , and hopefully this will catch that
-    # discrepancy.
-    try:
-        dialect = csv.Sniffer().sniff(f_csv.readline())
-    except:
-        print >> sys.stderr, "Failed to sniff parameters for file {0}, assuming , to be the delimiter symbol".format(os.path.split(pathToCsv)[1])
-        dialect = csv.get_dialect('excel')
-
-    f_csv.seek(0)
+#    # discrepancy.
+#    try:
+#        dialect = csv.Sniffer().sniff(f_csv.readline())
+#    except:
+#        print >> sys.stderr, "Failed to sniff parameters for file {0}, assuming , to be the delimiter symbol".format(os.path.split(pathToCsv)[1])
+#        dialect = csv.get_dialect('excel')
+#
+#    f_csv.seek(0)
 
     # Read the file with dictreader. If the file is empty or corrupt (such as defaultlog.csv in OpenSesame)
     # then skip the file but print an error message.
 #    try:
     #data = csv.reader(f_csv,dialect=dialect)
-    data = UnicodeReader(f_csv,dialect=dialect)
+    data = UnicodeReader(f_csv)
     rowDataList = list(data)
     headerList        = rowDataList[0]
     dataTupleList     = zip(*rowDataList[1:])

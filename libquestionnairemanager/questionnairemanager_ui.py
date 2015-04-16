@@ -25,10 +25,12 @@ import os
 import executeopensesamerun
 import profile
 import questionnairecreator_ui
+import errno
+import tempfile
 
 from PyQt4 import QtCore, Qt, QtGui, uic
 from PyQt4.QtWebKit import QWebView
-from tools import OutLog, get_resource_loc, get_data_loc, getOpensesamerunCmd
+from io_tools import OutLog, get_resource_loc, get_data_loc, getOpensesamerunCmd
 
 version = "1.0.0"
 author = "Bob Rosbag"
@@ -42,6 +44,7 @@ Copyright 2015
 {2}
 """.format(version,author,email)
 
+debug = False
 
 class QuestionnaireManagerUI(QtGui.QMainWindow):
     """
@@ -51,7 +54,10 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
         super(QuestionnaireManagerUI, self).__init__()
         self.fs = os.sep
         self._initUI()
+        self._initWidgets()
 
+
+    def _initWidgets(self):
 
         self.lang = []
         self.comboBoxItemList = []
@@ -59,14 +65,20 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
         self.widgetDict = {}
         self.widgetNameDict = {}
 
+        try:
+            self.comboBox.currentIndexChanged.disconnect(self.updateListWidget)
+        except:
+            pass
+
+        self.listWidget.clear()
+        self.comboBox.clear()
+
         self.processDirs()
         self.createComboBoxItems()
         self.createListWidget()
         self.updateListWidget()
-        self.comboBox.currentIndexChanged.connect(self.updateListWidget)
-#        self.comboBox.currentIndexChanged.connect(self.refreshWidgets)
-        self.connect(self, Qt.SIGNAL('triggered()'), self.closeEvent )
 
+        self.comboBox.currentIndexChanged.connect(self.updateListWidget)
 
     def _initUI(self):
         """
@@ -122,7 +134,8 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
             self.opensesamerunButton.hide()
             self.opensesameNotFoundLabel.hide()
 
-        #self.show()
+        if debug:
+            self.statusBox.show()
 
         # Set button actions
         self.inputFolderButton.clicked.connect(self.selectInputFolderLocation)
@@ -162,15 +175,23 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
         self._lastSelectedSourceDir = ""
         self.pythonCommand = ""
 
+    def isWritable(self, path):
+        try:
+            testfile = tempfile.TemporaryFile(dir = path)
+            testfile.close()
+            return True
+        except:
+            return False
+
 
     def closeEvent(self, event):
         reply = QtGui.QMessageBox.question(self, 'Message',
-            "Are you sure to quit?", QtGui.QMessageBox.Yes | 
+            "Are you sure to quit?", QtGui.QMessageBox.Yes |
             QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         if reply == QtGui.QMessageBox.Yes:
             event.accept()
         else:
-            event.ignore() 
+            event.ignore()
 
     def center(self):
         """
@@ -183,25 +204,29 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
         self.move(qr.topLeft())
 
     def addMCQuestion(self):
-
-        self.mc = questionnairecreator_ui.QuestionnaireCreatorUI(self.lang,self.sourceFolder,'mc')
-        self.mc.exec_()
-        self.refreshWidgets()
+        if self.isWritable(self.sourceFolder):
+            self.mc = questionnairecreator_ui.QuestionnaireCreatorUI(self.lang,self.sourceFolder,'mc')
+            self.mc.exec_()
+            self.refreshWidgets()
+        else:
+            self.showErrorMessage('Access denied, cannot write in questionnaire folder, please change questionnaire folder.')
 
     def addOpenQuestion(self):
-
-        self.open = questionnairecreator_ui.QuestionnaireCreatorUI(self.lang,self.sourceFolder,'open')
-        self.open.exec_()        
-        self.refreshWidgets()
+        if self.isWritable(self.sourceFolder):
+            self.open = questionnairecreator_ui.QuestionnaireCreatorUI(self.lang,self.sourceFolder,'open')
+            self.open.exec_()
+            self.refreshWidgets()
+        else:
+            self.showErrorMessage('Access denied, cannot write in questionnaire folder, please change questionnaire folder.')
 
     def saveGui(self):
 
         [selectedExperimentList, selectedLanguage] = self.getSelectedExperimentData()
-        profile.guiSave(self.ui,self.settingsSave,selectedExperimentList)
+        profile.guiSave(self,self.settingsSave,selectedExperimentList)
 
     def restoreGui(self):
 
-        selectedExperimentList = profile.guiRestore(self.ui,self.settingsRestore)
+        selectedExperimentList = profile.guiRestore(self,self.settingsRestore)
 
         nWidgets = self.listWidget.count()
         for index in range(nWidgets):
@@ -269,7 +294,7 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
         if selectedFolder:
             self.sourceFolder = selectedFolder
             self.inputFolderLocation.setText(os.path.normpath(self.sourceFolder))
-            self.refreshWidgets()
+            self._initWidgets()
 
     def selectLogFolderDestination(self):
         """
@@ -452,7 +477,7 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
         for index in range(nWidgets):
             listWidgetItem = self.listWidget.item(index)
             if listWidgetItem.checkState() == 2:
-                selectedExperimentList.append(listWidgetItem.text())
+                selectedExperimentList.append(unicode(listWidgetItem.text()))
         #print(selectedExperimentList)
 
         return [selectedExperimentList, selectedLanguage]
@@ -518,28 +543,58 @@ class QuestionnaireManagerUI(QtGui.QMainWindow):
 
             [selectedExperimentList, selectedLanguage] = self.getSelectedExperimentData()
 
+            selectedSubjectNr = unicode(self.subjectLineEdit.displayText())
 
+            logFileExists = None
+            logDestinationFileList = []
             for experiment in selectedExperimentList:
                 strippedExperiment = experiment.replace('.opensesame.tar.gz','')
                 strippedExperiment = strippedExperiment.replace('.opensesame','')
-                destinationFolder = self.destinationFolder + self.fs + selectedLanguage + self.fs + strippedExperiment + self.fs
+
+                logDestinationFolder = self.destinationFolder + self.fs + selectedLanguage + self.fs + strippedExperiment + self.fs
+                logDestinationFile = logDestinationFolder + self.fs + 'subject-' + selectedSubjectNr + '.csv'
+                logDestinationFileList.append(logDestinationFile)
+
                 try:
-                    os.makedirs(destinationFolder)
+                    os.makedirs(logDestinationFolder)
                 except OSError as exc: # Python >2.5
-                    if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    if exc.errno == errno.EEXIST and os.path.isdir(logDestinationFolder):
                         pass
                     else: raise
 
 
+                if  os.path.isfile(logDestinationFile):
+                    logFileExists = True
 
-            selectedSubjectNr = unicode(self.subjectLineEdit.displayText())
 
-            print("Starting Experiment...")
-            finishedExperiment = executeopensesamerun.runExperiment(self.pythonCommand, self.opensesamerunCommand ,self.sourceFolder, destinationFolder, selectedSubjectNr, selectedLanguage, selectedExperimentList)
-            if finishedExperiment:
-                print("Output saved to " + self.destinationFolder)
-                print("Ready.")
+            if logFileExists == True:
+                overwriteCheck = self.overwriteEvent( "Log file(s) already exists, do you want to overwrite the log file(s)?")
+            elif logFileExists == None:
+                overwriteCheck = True
+            else:
+                overwriteCheck = False
 
+            check = overwriteCheck
+
+            if check:
+                print("Starting Experiment...")
+                finishedExperiment = executeopensesamerun.runExperiment(self.pythonCommand, self.opensesamerunCommand ,self.sourceFolder, logDestinationFileList, selectedSubjectNr, selectedLanguage, selectedExperimentList)
+
+                if finishedExperiment:
+                    print("Output saved to " + self.destinationFolder)
+                    print("Ready.")
+
+
+    def overwriteEvent(self, message):
+
+        reply = QtGui.QMessageBox.question(self, 'Message',
+            message, QtGui.QMessageBox.Yes |
+            QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.Yes:
+            overwrite = True
+        else:
+            overwrite = False
+        return overwrite
 
     def showDocWindow(self):
         """

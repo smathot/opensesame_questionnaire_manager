@@ -25,7 +25,7 @@ from PyQt4 import QtGui, uic
 
 
 import questionnairecreator
-from tools import get_resource_loc
+from io_tools import get_resource_loc
 
 
 class QuestionnaireCreatorUI(QtGui.QDialog):
@@ -142,8 +142,6 @@ class QuestionnaireCreatorUI(QtGui.QDialog):
         else:
             nameCheck = True
 
-
-
         if self.kind == 'mc':
             categoryList = category.split('\n')
             scoreList = score.split('\n')
@@ -185,9 +183,17 @@ class QuestionnaireCreatorUI(QtGui.QDialog):
 
 
         self.baseName = name + '.opensesame.tar.gz'
-        fileName = self.sourceFolder + self.fs + self.language + self.fs + self.baseName
+        folderName = self.sourceFolder + self.fs + self.language
+        fileName = folderName + self.fs + self.baseName
 
-        if (self.kind == 'mc' and nquestions == n_id == ncategory == nscore and scoreCheck and nameCheck and numberCheck) or (self.kind == 'open' and nquestions == n_id and nameCheck):
+
+        if  os.path.isfile(fileName):
+            fileNameCheck = False
+        else:
+            fileNameCheck = True
+
+
+        if (self.kind == 'mc' and nquestions == n_id == ncategory == nscore and scoreCheck and nameCheck and numberCheck and fileNameCheck) or (self.kind == 'open' and nquestions == n_id and nameCheck and fileNameCheck):
             questionnairecreator.QuestionnaireCreator(self.infile, fileName, name, resolutionHorizontal, resolutionVertical, bgcolor, fgcolor, backend, instruction, order, questionList, idList, answerString, categoryList, scoreList, self.kind)
             self.done(0)
         elif not (self.kind == 'mc' and nquestions == n_id == ncategory == nscore and scoreCheck) or (self.kind == 'open' and nquestions == n_id):
@@ -196,6 +202,8 @@ class QuestionnaireCreatorUI(QtGui.QDialog):
             self.showErrorMessage('No survey name specified')
         elif not numberCheck:
             self.showErrorMessage('Field \"score\" should contain only numbers, found other characters')
+        elif not fileNameCheck:
+            self.showErrorMessage('Filename already exist, please use another name.')
 
 
     def showErrorMessage(self,message):

@@ -49,7 +49,7 @@ class OutLog(object):
 
         if self.out:
             self.out.write(m)
-       
+
 
 def get_resource_loc(item):
     """
